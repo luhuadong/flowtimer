@@ -25,9 +25,10 @@ def start(work, break_, sound):
 @main.command()
 def stats():
     """显示统计数据"""
-    daily_total, sessions = get_daily_stats()
+    daily_total, completed_count = get_daily_stats()  # 重命名变量
+
     click.echo(f"今日专注时间: {daily_total} 分钟")
-    click.echo(f"完成番茄钟: {len(sessions)} 次")
+    click.echo(f"完成番茄钟: {completed_count} 次")
 
 if __name__ == "__main__":
     main()

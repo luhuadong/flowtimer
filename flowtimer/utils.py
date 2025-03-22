@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import datetime
 import platform
-from playsound import playsound
+import simpleaudio as sa
 
 # 数据库路径
 DB_PATH = os.path.expanduser("~/.flowtimer.db")
@@ -20,10 +20,22 @@ def init_db():
     conn.close()
 
 def save_record(duration, mode):
-    conn = sqlite3.connect(DB_PATH)
-    conn.execute("INSERT INTO sessions (duration, mode) VALUES (?, ?)", (duration, mode))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        # 显式插入时间戳（避免默认值时区问题）
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cursor.execute(
+            "INSERT INTO sessions (start_time, duration, mode) VALUES (?, ?, ?)",
+            (timestamp, duration, mode)
+        )
+        conn.commit()  # 确保提交事务
+        # conn.close()
+    except Exception as e:
+        print(f"[ERROR] 保存记录失败: {e}")
+    finally:
+        if conn:
+            conn.close()  # 确保连接关闭
 
 def send_notification(message):
     system = platform.system()
@@ -37,17 +49,38 @@ def send_notification(message):
 
 def play_sound(sound_path):
     try:
-        playsound(sound_path)
+        wave_obj = sa.WaveObject.from_wave_file(sound_path)
+        wave_obj.play()
     except Exception as e:
-        print(f"播放声音失败: {e}")
+        print(f"播放失败: {e}")
 
 def get_daily_stats():
     conn = sqlite3.connect(DB_PATH)
-    today = datetime.now().strftime("%Y-%m-%d")
+    # 使用本地日期计算（避免 SQLite 内置 DATE() 的时区问题）
+    today_start = datetime.now().strftime("%Y-%m-%d 00:00:00")
+    today_end = datetime.now().strftime("%Y-%m-%d 23:59:59")
+    
     cursor = conn.execute("""
         SELECT SUM(duration), COUNT(*) 
         FROM sessions 
-        WHERE DATE(start_time) = ? AND mode = 'work'
-    """, (today,))
-    total, count = cursor.fetchone()
+        WHERE start_time BETWEEN ? AND ?
+          AND mode = 'work'
+    """, (today_start, today_end))
+    
+    total, count = cursor.fetchone() or (0, 0)
+    return total or 0, count or 0
+
+def get_daily_stats_2():
+    conn = sqlite3.connect(DB_PATH)
+    today_date = datetime.now().strftime("%Y-%m-%d")
+    
+    # 查询当日所有记录（忽略具体时间）
+    cursor = conn.execute("""
+        SELECT SUM(duration), COUNT(*) 
+        FROM sessions 
+        WHERE strftime('%Y-%m-%d', start_time) = ?
+          AND mode = 'work'
+    """, (today_date,))
+    
+    total, count = cursor.fetchone() or (0, 0)
     return total or 0, count or 0

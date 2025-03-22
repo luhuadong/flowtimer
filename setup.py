@@ -7,7 +7,7 @@ setup(
     install_requires=[
         "click>=8.0",
         "rich>=13.0",
-        "playsound>=1.3",
+        "simpleaudio>=1.0.4; sys_platform == 'linux'",
         "plotext>=5.0",
         "python-dotenv>=0.19",
     ],

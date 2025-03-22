@@ -28,6 +28,7 @@ class PomodoroTimer:
 
     def _handle_finish(self, progress):
         # 保存记录到数据库
+        print(f"[DEBUG] 保存记录: duration={self.work_time//60}, mode={self.current_mode}")
         save_record(self.work_time // 60, self.current_mode)
         
         # 发送通知和声音
