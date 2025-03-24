@@ -10,9 +10,16 @@
 pip install --upgrade pip setuptools wheel
 
 # Linux 系统需要安装以下依赖
-sudo apt-get install python3-gi gir1.2-gstreamer-1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good
-pip install pygobject
+sudo apt-get install -y python3-dev build-essential libasound2-dev
 ```
+
+依赖说明：
+
+| 组件                | 作用               | 为何需要安装               |
+| :------------------ | :----------------- | :------------------------- |
+| **python3-dev**     | 提供 Python 头文件 | 编译 C 扩展时需 `Python.h` |
+| **build-essential** | 包含 GCC 编译器    | 编译源代码为二进制文件     |
+| **libasound2-dev**  | ALSA 音频开发库    | `simpleaudio` 依赖 ALSA    |
 
 进入 flowtimer 工程目录，使用开发模式安装：
 
